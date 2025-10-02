@@ -7,14 +7,13 @@ const { connectDB } = require("./database");
 connectDB();
 
 const broker = aedes();
-console.log(process.env.PORT)
 
 const wsServer = http.createServer();
 ws.createServer({ server: wsServer }, broker.handle);
 
 broker.on("publish", (packet, client) => {
   console.log("Packet :", packet);
-  console.log("CLient :", client);
+  //console.log("CLient :", client);
 });
 
 wsServer.listen(process.env.PORT, () => {
