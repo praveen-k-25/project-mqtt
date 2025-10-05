@@ -11,15 +11,15 @@ const broker = aedes();
 const wsServer = http.createServer();
 ws.createServer({server: wsServer}, broker.handle);
 
-broker.on("publish", (packet, client) => {
+broker.on("publish", async(packet, client) => {
   try {
     let data = packet.payload.toString();
     let d = JSON.parse(data);
     let db = getDB();
     if (db) {
-      let collection = db.collection("user_locations");
+      let collection = await db.collection("user_locations");
       collection.createIndex({user: 1, timestamp: 1}, {unique: true});
-      collection.insertOne(d);
+      collection.insertOne(d);  
       console.log("Data Inserted", d);
     }
   } catch (err) {
