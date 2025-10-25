@@ -2,14 +2,14 @@ require("dotenv").config();
 const http = require("http");
 const aedes = require("aedes");
 const ws = require("websocket-stream");
-const {connectDB, getDB} = require("./database");
+const { connectDB, getDB } = require("./database");
 
 connectDB();
 
 const broker = aedes();
 
 const wsServer = http.createServer();
-ws.createServer({server: wsServer}, broker.handle);
+ws.createServer({ server: wsServer }, broker.handle);
 
 broker.on("publish", async (packet, client) => {
   try {
@@ -20,13 +20,13 @@ broker.on("publish", async (packet, client) => {
       const collection = db.collection("user_locations");
 
       // Ensure proper index
-      await collection.createIndex({user: 1, timestamp: 1}, {unique: true});
+      await collection.createIndex({ user: 1, timestamp: 1 }, { unique: true });
 
       // Insert or update
       await collection.updateOne(
-        {user: d.user, timestamp: d.timestamp},
-        {$set: d},
-        {upsert: true}
+        { user: d.user, time: d.time },
+        { $set: d },
+        { upsert: true }
       );
       console.log("✅ Location stored:", d);
     }
