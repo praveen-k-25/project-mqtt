@@ -20,11 +20,14 @@ broker.on("publish", async (packet, client) => {
       const collection = db.collection("user_locations");
 
       // Ensure proper index
-      await collection.createIndex({ user: 1, timestamp: 1 }, { unique: true });
+      await collection.createIndex(
+        { user: 1, timestamp: 1, time: 1 },
+        { unique: true }
+      );
 
       // Insert or update
       await collection.updateOne(
-        { user: d.user, time: d.time },
+        { user: d.user, timestamp: d.timestamp, time: d.time },
         { $set: d },
         { upsert: true }
       );
