@@ -20,7 +20,7 @@ broker.on("publish", async (packet, client) => {
     let d = JSON.parse(data);
     let db = getDB();
     if (db) {
-      const collection = db.collection("user_locations_test");
+      const collection = db.collection("user_locations");
 
       if (!clientCache.get(d.user)) {
         clientCache.set(d.user, d);
@@ -46,7 +46,6 @@ broker.on("publish", async (packet, client) => {
           ).toFixed(0)
         );
         d.status = d.speed > 1 ? "moving" : "active";
-        console.log(d.speed);
       }
 
       // Ensure proper index
