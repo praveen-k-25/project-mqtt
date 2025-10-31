@@ -20,7 +20,7 @@ broker.on("publish", async (packet, client) => {
     let d = JSON.parse(data);
     let db = getDB();
     if (db) {
-      const collection = db.collection("user_locations");
+      const collection = db.collection("user_locations_test");
 
       if (!clientCache.get(d.user)) {
         clientCache.set(d.user, d);
