@@ -19,6 +19,7 @@ broker.on("publish", async (packet, client) => {
     let data = packet.payload.toString();
     let d = JSON.parse(data);
     let db = getDB();
+    console.log(d);
     if (db) {
       const collection = db.collection("user_locations");
 
@@ -78,7 +79,7 @@ broker.on("publish", async (packet, client) => {
       expiryCache.set(d.user, timer);
 
       broker.publish({
-        topic: `user/processed/${d.user.id}`,
+        topic: `user/processed/${d.user}`,
         payload: Buffer.from(JSON.stringify(d)),
         qos: 0,
         retain: false,
