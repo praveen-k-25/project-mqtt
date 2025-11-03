@@ -78,7 +78,7 @@ broker.on("publish", async (packet, client) => {
       expiryCache.set(d.user, timer);
 
       broker.publish({
-        topic: `user/processed/${d.user}`,
+        topic: `user/processed/${d.user.id}`,
         payload: Buffer.from(JSON.stringify(d)),
         qos: 0,
         retain: false,
