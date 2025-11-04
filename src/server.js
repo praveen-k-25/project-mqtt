@@ -27,7 +27,7 @@ broker.on("publish", async (packet, client) => {
         clientCache.set(d.user, d);
         expiryCache.set(d.user, d);
         d.speed = 0;
-        d.status = "active";
+        d.status = "idle";
       } else {
         if (expiryCache.has(d.user)) {
           clearTimeout(expiryCache.get(d.user));
@@ -46,7 +46,7 @@ broker.on("publish", async (packet, client) => {
             d.timestamp
           ).toFixed(0)
         );
-        d.status = d.speed > 1 ? "moving" : "active";
+        d.status = d.speed > 1 ? "moving" : "idle";
       }
 
       // Ensure proper index
