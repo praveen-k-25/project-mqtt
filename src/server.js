@@ -71,6 +71,12 @@ broker.on("publish", async (packet, client) => {
           { $set: d },
           { upsert: true }
         );
+        broker.publish({
+          topic: `user/processed/${d.user}`,
+          payload: Buffer.from(JSON.stringify(d)),
+          qos: 0,
+          retain: false,
+        });
         clientCache.delete(d.user);
         expiryCache.delete(d.user);
       }, 15000);
