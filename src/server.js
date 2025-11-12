@@ -6,7 +6,10 @@ const { connectDB, getDB } = require("./database");
 const { calculateSpeed } = require("./haversineDistance");
 
 connectDB();
-const broker = aedes();
+const broker = aedes({
+  heartbeatInterval: 1000 * 5, // check clients every 5 seconds
+});
+
 const wsServer = http.createServer();
 wss.createServer({ server: wsServer }, broker.handle);
 
