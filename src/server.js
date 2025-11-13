@@ -7,7 +7,16 @@ const { calculateSpeed } = require("./haversineDistance");
 
 connectDB();
 const broker = aedes({
-  heartbeatInterval: 1000 * 5, // check clients every 5 seconds
+  //heartbeatInterval: 1000 * 5, // check clients every 5 seconds
+  authnticate: (client, username, password, callback) => {
+    const authorized =
+      username === process.env.MQTT_USER &&
+      password.toString() === process.env.MQTT_PASS;
+    if (authorized) {
+      client.user = username;
+    }
+    callback(null, authorized);
+  },
 });
 
 const wsServer = http.createServer();
