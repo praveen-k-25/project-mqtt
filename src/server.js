@@ -7,15 +7,30 @@ const { calculateSpeed } = require("./haversineDistance");
 
 connectDB();
 const broker = aedes({
-  //heartbeatInterval: 1000 * 5, // check clients every 5 seconds
-  authnticate: (client, username, password, callback) => {
+  // heartbeatInterval: 1000 * 5, // optional: check clients every 5 seconds
+  authenticate: (client, username, password, callback) => {
+    console.log(
+      "Username:",
+      username,
+      process.env.VITE_MQTT_USERNAME,
+      "Password:",
+      password?.toString(),
+      process.env.VITE_MQTT_PASSWORD
+    );
+
     const authorized =
-      username === process.env.MQTT_USER &&
-      password.toString() === process.env.MQTT_PASS;
+      username === process.env.VITE_MQTT_USERNAME &&
+      password?.toString() === process.env.VITE_MQTT_PASSWORD;
+
     if (authorized) {
       client.user = username;
+      callback(null, true); // ✅ accepted
+    } else {
+      console.warn(`❌ MQTT authentication failed for user: ${username}`);
+      const error = new Error("Authentication failed");
+      error.returnCode = 4; // Bad username/password
+      callback(error, false); // ❌ rejected
     }
-    callback(null, authorized);
   },
 });
 
