@@ -4,20 +4,14 @@ const aedes = require("aedes");
 const wss = require("websocket-stream");
 const { connectDB, getDB } = require("./database");
 const { calculateSpeed } = require("./haversineDistance");
+const { handleInactiveCaches } = require("./functions/InactiveCaches");
+const { handleExpiryCache } = require("./functions/ExpiryCache");
+const { handleMqttData } = require("./functions/DataHandling");
 
 connectDB();
 const broker = aedes({
   // heartbeatInterval: 1000 * 5, // optional: check clients every 5 seconds
   authenticate: (client, username, password, callback) => {
-    console.log(
-      "Username:",
-      username,
-      process.env.VITE_MQTT_USERNAME,
-      "Password:",
-      password?.toString(),
-      process.env.VITE_MQTT_PASSWORD
-    );
-
     const authorized =
       username === process.env.VITE_MQTT_USERNAME &&
       password?.toString() === process.env.VITE_MQTT_PASSWORD;
@@ -39,6 +33,7 @@ wss.createServer({ server: wsServer }, broker.handle);
 
 const clientCache = new Map();
 const expiryCache = new Map();
+const inactiveCache = new Map();
 
 broker.on("publish", async (packet, client) => {
   if (!client) return;
@@ -46,11 +41,41 @@ broker.on("publish", async (packet, client) => {
     let data = packet.payload.toString();
     let d = JSON.parse(data);
     let db = getDB();
-    console.log(d);
+    //console.log(d);
     if (db) {
-      const collection = db.collection("user_locations");
+      const collection = db.collection("test_location");
 
-      if (!clientCache.get(d.user)) {
+      /*  if (inactiveCache.get(d.user)) {
+        const cacheData = inactiveCache.get(d.user);
+        cacheData.inactiveEnd = Date.now();
+        await collection.updateOne(
+          { user: cacheData.user, inactiveStart: cacheData.inactiveStart },
+          { $set: cacheData },
+          { upsert: true }
+        );
+        inactiveCache.delete(d.user);
+      } */
+
+      async function userDataHandler() {
+        const [inactive, expiry, client] = await Promise.all([
+          handleInactiveCaches(inactiveCache, d, collection),
+          handleExpiryCache(
+            d,
+            clientCache,
+            inactiveCache,
+            expiryCache,
+            collection,
+            broker
+          ),
+          handleMqttData(clientCache, expiryCache, d, collection, broker),
+        ]);
+
+        //console.log(inactive, expiry, client);
+      }
+
+      userDataHandler();
+
+      /*  if (!clientCache.get(d.user)) {
         clientCache.set(d.user, d);
         expiryCache.set(d.user, d);
         d.speed = 0;
@@ -87,17 +112,24 @@ broker.on("publish", async (packet, client) => {
         { user: d.user, timestamp: d.timestamp, time: d.time },
         { $set: d },
         { upsert: true }
-      );
+      ); */
 
-      // Start a new timer for 10 seconds
+      /* // Start a new timer for 15 seconds
       const timer = setTimeout(async () => {
         d.speed = 0;
         d.status = 3;
+        d.inactiveStart = Date.now();
         await collection.updateOne(
-          { user: d.user, timestamp: d.timestamp, time: d.time },
+          {
+            user: d.user,
+            timestamp: d.timestamp,
+            time: d.time,
+          },
           { $set: d },
           { upsert: true }
         );
+        inactiveCache.set(d.user, d);
+        d.delete("inactiveStart");
         broker.publish({
           topic: `user/processed/${d.user}`,
           payload: Buffer.from(JSON.stringify(d)),
@@ -109,14 +141,14 @@ broker.on("publish", async (packet, client) => {
       }, 15000);
 
       // Store the timer in the cache
-      expiryCache.set(d.user, timer);
+      expiryCache.set(d.user, timer); */
 
-      broker.publish({
+      /* broker.publish({
         topic: `user/processed/${d.user}`,
         payload: Buffer.from(JSON.stringify(d)),
         qos: 0,
         retain: false,
-      });
+      }); */
     }
   } catch (err) {
     console.error("authorizePublish error:", err);
