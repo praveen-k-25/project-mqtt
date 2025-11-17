@@ -42,11 +42,13 @@ broker.on("publish", async (packet, client) => {
     let d = JSON.parse(data);
     let db = getDB();
     if (db) {
-      const collection = db.collection("test_location");
+      const collection = await db.collection("test_location");
 
       if (inactiveCache.get(d.user)) {
         const cacheData = inactiveCache.get(d.user);
         cacheData.inactiveEnd = Date.now();
+        cacheData.activeLat = d.lat;
+        cacheData.activeLng = d.lng;
         await collection.updateOne(
           { user: cacheData.user, inactiveStart: cacheData.inactiveStart },
           { $set: cacheData },
@@ -119,7 +121,23 @@ broker.on("publish", async (packet, client) => {
       const timer = setTimeout(async () => {
         d.speed = 0;
         d.status = 3;
+
+        broker.publish({
+          topic: `user/processed/${d.user}`,
+          payload: Buffer.from(JSON.stringify(d)),
+          qos: 0,
+          retain: false,
+        });
+
+        clientCache.delete(d.user);
+        expiryCache.delete(d.user);
+
+        // Inactive cache handling
         d.inactiveStart = Date.now();
+        d.inactiveLat = d.lat;
+        d.inactiveLng = d.lng;
+        delete d.lat;
+        delete d.lng;
         await collection.updateOne(
           {
             user: d.user,
@@ -130,14 +148,6 @@ broker.on("publish", async (packet, client) => {
           { upsert: true }
         );
         inactiveCache.set(d.user, d);
-        broker.publish({
-          topic: `user/processed/${d.user}`,
-          payload: Buffer.from(JSON.stringify(d)),
-          qos: 0,
-          retain: false,
-        });
-        clientCache.delete(d.user);
-        expiryCache.delete(d.user);
       }, 15000);
 
       // Store the timer in the cache
