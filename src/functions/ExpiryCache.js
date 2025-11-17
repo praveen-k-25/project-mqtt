@@ -20,7 +20,8 @@ async function handleExpiryCache(
       { $set: d },
       { upsert: true }
     );
-    console.log("cache added");
+
+    //console.log("cache added");
     inactiveCache.set(d.user, d);
     delete d.inactiveStart;
 

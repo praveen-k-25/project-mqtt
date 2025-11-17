@@ -28,8 +28,6 @@ async function handleMqttData(clientCache, expiryCache, d, collection, broker) {
     d.status = d.speed > 1 ? 1 : 2;
   }
 
-  console.log(expiryCache);
-
   // Ensure proper index
   await collection.createIndex({ timestamp: 1, time: 1 }, { unique: true });
 

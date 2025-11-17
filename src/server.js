@@ -41,11 +41,10 @@ broker.on("publish", async (packet, client) => {
     let data = packet.payload.toString();
     let d = JSON.parse(data);
     let db = getDB();
-    //console.log(d);
     if (db) {
       const collection = db.collection("test_location");
 
-      /*  if (inactiveCache.get(d.user)) {
+      if (inactiveCache.get(d.user)) {
         const cacheData = inactiveCache.get(d.user);
         cacheData.inactiveEnd = Date.now();
         await collection.updateOne(
@@ -54,9 +53,9 @@ broker.on("publish", async (packet, client) => {
           { upsert: true }
         );
         inactiveCache.delete(d.user);
-      } */
+      }
 
-      async function userDataHandler() {
+      /*  async function userDataHandler() {
         const [inactive, expiry, client] = await Promise.all([
           handleInactiveCaches(inactiveCache, d, collection),
           handleExpiryCache(
@@ -70,12 +69,14 @@ broker.on("publish", async (packet, client) => {
           handleMqttData(clientCache, expiryCache, d, collection, broker),
         ]);
 
-        //console.log(inactive, expiry, client);
+        console.log(clientCache, expiryCache, inactiveCache);
+
+        console.log("-------------------------------");
       }
 
-      userDataHandler();
+      userDataHandler(); */
 
-      /*  if (!clientCache.get(d.user)) {
+      if (!clientCache.get(d.user)) {
         clientCache.set(d.user, d);
         expiryCache.set(d.user, d);
         d.speed = 0;
@@ -112,9 +113,9 @@ broker.on("publish", async (packet, client) => {
         { user: d.user, timestamp: d.timestamp, time: d.time },
         { $set: d },
         { upsert: true }
-      ); */
+      );
 
-      /* // Start a new timer for 15 seconds
+      // Start a new timer for 15 seconds
       const timer = setTimeout(async () => {
         d.speed = 0;
         d.status = 3;
@@ -129,7 +130,6 @@ broker.on("publish", async (packet, client) => {
           { upsert: true }
         );
         inactiveCache.set(d.user, d);
-        d.delete("inactiveStart");
         broker.publish({
           topic: `user/processed/${d.user}`,
           payload: Buffer.from(JSON.stringify(d)),
@@ -141,14 +141,14 @@ broker.on("publish", async (packet, client) => {
       }, 15000);
 
       // Store the timer in the cache
-      expiryCache.set(d.user, timer); */
+      expiryCache.set(d.user, timer);
 
-      /* broker.publish({
+      broker.publish({
         topic: `user/processed/${d.user}`,
         payload: Buffer.from(JSON.stringify(d)),
         qos: 0,
         retain: false,
-      }); */
+      });
     }
   } catch (err) {
     console.error("authorizePublish error:", err);
